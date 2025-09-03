@@ -1,5 +1,5 @@
 /node_modules
-/assets/dist
+# /assets/dist
 /vendor
 /.env.testing
 /c3.php
