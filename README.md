@@ -1,5 +1,11 @@
 # ACF Image Aspect Ratio Crop Field
 
+## Interactive Strategies' Fork
+
+This is a fork of https://github.com/joppuyo/acf-image-aspect-ratio-crop. It exists because this plugin is getting a little older, and hitting some PHP 8.2, 8.3 deprecation warnings and errors. The original repo has a lot of pull requests pending and appears to no longer be actively maintained, so we're fixing the issues ourselves. If the original repo becomes active again and solves these problems, we can drop this one.
+
+## Original Documentation
+
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/joppuyo/acf-image-aspect-ratio-crop/main.yml?branch=master&logo=github)](https://github.com/joppuyo/acf-image-aspect-ratio-crop/actions/workflows/main.yml)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/joppuyo/acf-image-aspect-ratio-crop/test.yml?branch=master&label=tests&logo=github)](https://github.com/joppuyo/acf-image-aspect-ratio-crop/actions/workflows/test.yml)
 [![WordPress plugin](https://img.shields.io/wordpress/plugin/v/acf-image-aspect-ratio-crop?logo=wordpress)](https://wordpress.org/plugins/acf-image-aspect-ratio-crop/)
