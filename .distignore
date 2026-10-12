@@ -1,5 +1,6 @@
 /.github
 /node_modules
+/vendor
 /tests
 /.git
 /.wordpress-org
@@ -7,11 +8,8 @@
 .gitignore
 .prettierrc.js
 .distignore
-.env.testing.example
-codeception.dist.yml
+.nvmrc
 composer.lock
-docker-compose.yml
-Dockerfile
 package-lock.json
 webpack.config.js
-wp-su.sh
+/acf-zips
