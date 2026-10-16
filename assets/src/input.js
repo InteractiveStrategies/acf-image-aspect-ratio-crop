@@ -200,7 +200,6 @@ import { sprintf } from 'sprintf-js';
 
     initialize: function() {
       this.isFirstCrop = null;
-      var self = this;
 
       // add attribute to form
       if (this.o.uploader == 'basic') {
@@ -208,135 +207,159 @@ import { sprintf } from 'sprintf-js';
       }
 
       this.escapeHandlerBound = this.escapeHandler.bind(this);
+    },
 
-      $(document).on('click', '.js-acf-image-aspect-ratio-crop-cancel', () =>
-        this.closeModal(),
-      );
+    /*
+     * Bind Crop, Reset, and Cancel on the modal that just opened.
+     *
+     * Document-level handlers were attached in initialize() and closed over
+     * whichever field instance ACF created last. WordPress 7.1 edits ACF
+     * blocks in the sidebar and re-inits those fields often, so the handler
+     * no longer belongs to the field that opened the modal and the buttons
+     * do nothing.
+     */
+    attachCropModalEvents: function() {
+      var self = this;
 
-      $(document)
-        .off('click', '.js-acf-image-aspect-ratio-crop-reset')
-        .on('click', '.js-acf-image-aspect-ratio-crop-reset', () => {
-          this.cropper.reset();
-        });
+      $('.js-acf-image-aspect-ratio-crop-cancel').off('click.aiarc');
+      $('.js-acf-image-aspect-ratio-crop-reset').off('click.aiarc');
+      $('.js-acf-image-aspect-ratio-crop-crop').off('click.aiarc');
 
-      $(document)
-        .off('click', '.js-acf-image-aspect-ratio-crop-crop')
-        .on('click', '.js-acf-image-aspect-ratio-crop-crop', function() {
-          var cropData = self.cropper.getData(true);
+      $('.js-acf-image-aspect-ratio-crop-cancel').on('click.aiarc', function(e) {
+        e.preventDefault();
+        self.closeModal();
+      });
 
-          $('.js-acf-image-aspect-ratio-crop-modal').css(
-            'max-width',
-            self.cropper.containerData.width,
-          );
+      $('.js-acf-image-aspect-ratio-crop-reset').on('click.aiarc', function(e) {
+        e.preventDefault();
+        if (self.cropper) {
+          self.cropper.reset();
+        }
+      });
 
-          var cropType = $(field)
-            .find('.acf-image-uploader-aspect-ratio-crop')
-            .data('crop_type');
+      $('.js-acf-image-aspect-ratio-crop-crop').on('click.aiarc', function(e) {
+        e.preventDefault();
 
-          let acfKey = $(field)
-            .find('.acf-image-uploader-aspect-ratio-crop')
-            .data('key');
+        if (!self.cropper) {
+          console.error('Cropper not initialized');
+          return;
+        }
 
-          let postId = $(field)
-            .find('.acf-image-uploader-aspect-ratio-crop')
-            .data('post-id');
+        var cropData = self.cropper.getData(true);
 
-          var data = {
-            id: $(this).data('id'),
-            aspectRatioHeight: $(this).data('aspect-ratio-height'),
-            aspectRatioWidth: $(this).data('aspect-ratio-width'),
-            cropType: $(this).data('crop-type'),
-            x: cropData.x,
-            y: cropData.y,
-            width: cropData.width,
-            height: cropData.height,
-            temp_post_id: aiarc.temp_post_id,
-            key: acfKey,
-            post_id: postId,
-          };
+        $('.js-acf-image-aspect-ratio-crop-modal').css(
+          'max-width',
+          self.cropper.containerData.width,
+        );
 
-          $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', true);
-          $('.js-acf-image-aspect-ratio-crop-reset').prop('disabled', true);
+        var cropType = $(field)
+          .find('.acf-image-uploader-aspect-ratio-crop')
+          .data('crop_type');
 
-          // prettier-ignore
-          var loading = '<div class="acf-image-aspect-ratio-crop-modal-loading">' +
-                          '<div class="acf-image-aspect-ratio-crop-modal-loading-icon">' +
-                          '<!-- Icon from https://github.com/google/material-design-icons -->' +
-                          '<!-- Licensed under Apache License 2.0 -->' +
-                          '<!-- Copyright (c) Google Inc. -->' +
-                          '<svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><path d="M7 2.64V1L4.75 3.18 7 5.36V3.73A3.33 3.33 0 0 1 10.38 7c0 .55-.15 1.07-.4 1.53l.82.8c.44-.68.7-1.47.7-2.33A4.43 4.43 0 0 0 7 2.64zm0 7.63A3.33 3.33 0 0 1 3.62 7c0-.55.15-1.07.4-1.53l-.82-.8c-.44.68-.7 1.47-.7 2.33A4.43 4.43 0 0 0 7 11.36V13l2.25-2.18L7 8.64v1.63z" fill="#FFF" fill-rule="nonzero"/></svg>' +
-                          '</div>' +
-                          '<div class="acf-image-aspect-ratio-crop-modal-loading-text">' +
-                          aiarc_translations.cropping_in_progress +
-                          '</div>' +
-                        '</div>';
+        let acfKey = $(field)
+          .find('.acf-image-uploader-aspect-ratio-crop')
+          .data('key');
 
-          // prettier-ignore
-          var error = '<div class="acf-image-aspect-ratio-crop-modal-error">' +
-                        '<div class="acf-image-aspect-ratio-crop-modal-error-icon">' +
+        let postId = $(field)
+          .find('.acf-image-uploader-aspect-ratio-crop')
+          .data('post-id');
+
+        var data = {
+          id: $(this).data('id'),
+          aspectRatioHeight: $(this).data('aspect-ratio-height'),
+          aspectRatioWidth: $(this).data('aspect-ratio-width'),
+          cropType: $(this).data('crop-type'),
+          x: cropData.x,
+          y: cropData.y,
+          width: cropData.width,
+          height: cropData.height,
+          temp_post_id: aiarc.temp_post_id,
+          key: acfKey,
+          post_id: postId,
+        };
+
+        $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', true);
+        $('.js-acf-image-aspect-ratio-crop-reset').prop('disabled', true);
+
+        // prettier-ignore
+        var loading = '<div class="acf-image-aspect-ratio-crop-modal-loading">' +
+                        '<div class="acf-image-aspect-ratio-crop-modal-loading-icon">' +
                         '<!-- Icon from https://github.com/google/material-design-icons -->' +
                         '<!-- Licensed under Apache License 2.0 -->' +
                         '<!-- Copyright (c) Google Inc. -->' +
-                        '<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M1 20.14h20l-10-17-10 17zm10.9-2.69h-1.8v-1.79h1.8v1.8zm0-3.58h-1.8V10.3h1.8v3.58z" fill="#F44336" fill-rule="nonzero"/></svg>' +
+                        '<svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"><path d="M7 2.64V1L4.75 3.18 7 5.36V3.73A3.33 3.33 0 0 1 10.38 7c0 .55-.15 1.07-.4 1.53l.82.8c.44-.68.7-1.47.7-2.33A4.43 4.43 0 0 0 7 2.64zm0 7.63A3.33 3.33 0 0 1 3.62 7c0-.55.15-1.07.4-1.53l-.82-.8c-.44.68-.7 1.47-.7 2.33A4.43 4.43 0 0 0 7 11.36V13l2.25-2.18L7 8.64v1.63z" fill="#FFF" fill-rule="nonzero"/></svg>' +
                         '</div>' +
-                        '<div class="acf-image-aspect-ratio-crop-modal-error-text">' +
-                        aiarc_translations.cropping_failed +
+                        '<div class="acf-image-aspect-ratio-crop-modal-loading-text">' +
+                        aiarc_translations.cropping_in_progress +
                         '</div>' +
                       '</div>';
 
-          $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
-          $('.js-acf-image-aspect-ratio-crop-modal-footer-status').html(
-            loading,
-          );
-          self.cropper.disable();
+        // prettier-ignore
+        var error = '<div class="acf-image-aspect-ratio-crop-modal-error">' +
+                      '<div class="acf-image-aspect-ratio-crop-modal-error-icon">' +
+                      '<!-- Icon from https://github.com/google/material-design-icons -->' +
+                      '<!-- Licensed under Apache License 2.0 -->' +
+                      '<!-- Copyright (c) Google Inc. -->' +
+                      '<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><path d="M1 20.14h20l-10-17-10 17zm10.9-2.69h-1.8v-1.79h1.8v1.8zm0-3.58h-1.8V10.3h1.8v3.58z" fill="#F44336" fill-rule="nonzero"/></svg>' +
+                      '</div>' +
+                      '<div class="acf-image-aspect-ratio-crop-modal-error-text">' +
+                      aiarc_translations.cropping_failed +
+                      '</div>' +
+                    '</div>';
 
-          let options = {};
+        $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
+        $('.js-acf-image-aspect-ratio-crop-modal-footer-status').html(
+          loading,
+        );
+        self.cropper.disable();
 
-          let url = null;
+        let options = {};
 
-          if (window.aiarc_settings.rest_api_compat === '') {
-            url = `${window.aiarc.api_root}/aiarc/v1/crop`;
-            options = {
-              headers: {
-                'X-Aiarc-Nonce': window.aiarc.nonce,
-                'X-WP-Nonce': window.aiarc.wp_rest_nonce,
-              },
-            };
-          }
+        let url = null;
 
-          if (window.aiarc_settings.rest_api_compat === '1') {
-            url = ajaxurl;
-            data = qs.stringify({
-              action: 'acf_image_aspect_ratio_crop_crop',
-              nonce: window.aiarc.nonce,
-              data: JSON.stringify(data),
-            });
-          }
+        if (window.aiarc_settings.rest_api_compat === '') {
+          url = `${window.aiarc.api_root}/aiarc/v1/crop`;
+          options = {
+            headers: {
+              'X-Aiarc-Nonce': window.aiarc.nonce,
+              'X-WP-Nonce': window.aiarc.wp_rest_nonce,
+            },
+          };
+        }
 
-          axios
-            .post(url, data, options)
-            .then(response => {
-              self.cropComplete(response.data);
-              $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', false);
-              $('.js-acf-image-aspect-ratio-crop-reset').prop(
-                'disabled',
-                false,
-              );
-              $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
-            })
-            .catch(response => {
-              console.error(response);
-              self.cropper.enable();
-              $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', false);
-              $('.js-acf-image-aspect-ratio-crop-reset').prop(
-                'disabled',
-                false,
-              );
-              $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
-              $('.js-acf-image-aspect-ratio-crop-modal-footer-status').html(
-                error,
-              );
-            });
+        if (window.aiarc_settings.rest_api_compat === '1') {
+          url = ajaxurl;
+          data = qs.stringify({
+            action: 'acf_image_aspect_ratio_crop_crop',
+            nonce: window.aiarc.nonce,
+            data: JSON.stringify(data),
+          });
+        }
+
+        axios
+          .post(url, data, options)
+          .then(response => {
+            self.cropComplete(response.data);
+            $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', false);
+            $('.js-acf-image-aspect-ratio-crop-reset').prop(
+              'disabled',
+              false,
+            );
+            $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
+          })
+          .catch(response => {
+            console.error(response);
+            self.cropper.enable();
+            $('.js-acf-image-aspect-ratio-crop-crop').prop('disabled', false);
+            $('.js-acf-image-aspect-ratio-crop-reset').prop(
+              'disabled',
+              false,
+            );
+            $('.js-acf-image-aspect-ratio-crop-modal-footer-status').empty();
+            $('.js-acf-image-aspect-ratio-crop-modal-footer-status').html(
+              error,
+            );
+          });
         });
     },
 
@@ -751,6 +774,7 @@ import { sprintf } from 'sprintf-js';
           ${aiarc_translations.modal_title}
         </div>
         <button
+          type="button"
           class="acf-image-aspect-ratio-crop-modal-heading-close js-acf-image-aspect-ratio-crop-cancel"
           aria-label="Close"
         >
@@ -770,15 +794,17 @@ import { sprintf } from 'sprintf-js';
         ></div>
         <div class="acf-image-aspect-ratio-crop-modal-footer-buttons">
           <button
+            type="button"
             class="aiarc-button aiarc-button-link acf-image-aspect-ratio-crop-reset js-acf-image-aspect-ratio-crop-reset"
           >
             ${require('!raw-loader!./reset.svg')}
             ${aiarc_translations.reset}
           </button>
-          <button class="aiarc-button aiarc-button-default js-acf-image-aspect-ratio-crop-cancel">
+          <button type="button" class="aiarc-button aiarc-button-default js-acf-image-aspect-ratio-crop-cancel">
             ${aiarc_translations.cancel}
           </button>
           <button
+            type="button"
             class="aiarc-button aiarc-button-primary js-acf-image-aspect-ratio-crop-crop"
             data-id="${id}"
             data-aspect-ratio-height="${aspectRatioHeight}"
@@ -798,6 +824,9 @@ import { sprintf } from 'sprintf-js';
         $('.js-acf-image-aspect-ratio-crop-modal-image')[0],
         options,
       );
+
+      // Attach after the modal exists, on this field instance.
+      this.attachCropModalEvents();
 
       // Test helper
       window._acf_image_aspect_ratio_cropper = this.cropper;
@@ -858,9 +887,15 @@ import { sprintf } from 'sprintf-js';
         acf.val(this.$input, '');
         this.render({});
       }
+      $('.js-acf-image-aspect-ratio-crop-cancel').off('click.aiarc');
+      $('.js-acf-image-aspect-ratio-crop-reset').off('click.aiarc');
+      $('.js-acf-image-aspect-ratio-crop-crop').off('click.aiarc');
+
       $('.acf-image-aspect-ratio-crop-backdrop').remove();
       document.removeEventListener('keydown', this.escapeHandlerBound);
-      this.cropper.destroy();
+      if (this.cropper) {
+        this.cropper.destroy();
+      }
     },
   });
 

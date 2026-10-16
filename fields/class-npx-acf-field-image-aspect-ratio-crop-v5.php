@@ -15,8 +15,6 @@ class npx_acf_field_image_aspect_ratio_crop extends acf_field
 {
     /** @var string */
     public $temp_post_id;
-    protected $settings;
-
 
     /** @var array */
     protected $settings;
@@ -634,7 +632,9 @@ class npx_acf_field_image_aspect_ratio_crop extends acf_field
     {
         global $post;
         $url = $this->settings['url'];
-        $version = $this->settings['version'];
+        // Suffix busts caches after the block-editor modal patch. The plugin
+        // version string otherwise stays the same, so browsers keep the old script.
+        $version = $this->settings['version'] . '-block-editor-modal';
 
         wp_register_script(
             'acf-image-aspect-ratio-crop',

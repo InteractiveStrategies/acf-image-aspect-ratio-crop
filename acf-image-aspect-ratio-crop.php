@@ -1163,6 +1163,12 @@ class npx_acf_plugin_image_aspect_ratio_crop
             $this->temp_path = $temp_directory . $temp_name;
             try {
                 $url = wp_get_attachment_url($data['id']);
+                // REST requests are not is_admin(), so the theme's root-relative
+                // URL filter turns this into /wp-content/uploads/... wp_remote_get
+                // rejects that with "A valid URL was not provided."
+                if (is_string($url) && str_starts_with($url, '/')) {
+                    $url = home_url($url);
+                }
                 $url = apply_filters('aiarc_request_url', $url, $data['id']);
 
                 $request_options = [
@@ -1174,7 +1180,9 @@ class npx_acf_plugin_image_aspect_ratio_crop
                 $result = wp_remote_get($url, $request_options);
 
                 if (is_wp_error($result)) {
-                    throw new Exception('Failed to save image');
+                    throw new Exception(
+                        'Failed to save image: ' . $result->get_error_message()
+                    );
                 }
                 $image = wp_get_image_editor($this->temp_path);
             } catch (Exception $exception) {
