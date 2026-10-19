@@ -21,6 +21,7 @@ import { sprintf } from 'sprintf-js';
     actions: {
       ready: 'initialize',
       append: 'initialize',
+      remount: 'initialize',
     },
 
     events: {
@@ -209,17 +210,11 @@ import { sprintf } from 'sprintf-js';
       this.escapeHandlerBound = this.escapeHandler.bind(this);
     },
 
-    /*
-     * Bind Crop, Reset, and Cancel on the modal that just opened.
-     *
-     * Document-level handlers were attached in initialize() and closed over
-     * whichever field instance ACF created last. WordPress 7.1 edits ACF
-     * blocks in the sidebar and re-inits those fields often, so the handler
-     * no longer belongs to the field that opened the modal and the buttons
-     * do nothing.
-     */
-    attachCropModalEvents: function() {
-      var self = this;
+      $(document)
+        .off('click', '.js-acf-image-aspect-ratio-crop-cancel')
+        .on('click', '.js-acf-image-aspect-ratio-crop-cancel', () =>
+          this.closeModal(),
+        );
 
       $('.js-acf-image-aspect-ratio-crop-cancel').off('click.aiarc');
       $('.js-acf-image-aspect-ratio-crop-reset').off('click.aiarc');
